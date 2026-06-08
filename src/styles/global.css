@@ -455,6 +455,21 @@ footer p {
   text-align: right;
 }
 
+.footer-meta {
+  text-align: right;
+}
+
+.author-link {
+  color: #f4f1eb;
+  font-weight: 700;
+  text-underline-offset: 3px;
+}
+
+.author-link:hover,
+.author-link:focus-visible {
+  color: var(--red-bright);
+}
+
 .notice {
   margin-top: 24px;
   padding: 14px 16px;
@@ -665,6 +680,10 @@ footer p {
   }
 
   .refresh-note {
+    text-align: left;
+  }
+
+  .footer-meta {
     text-align: left;
   }
 
