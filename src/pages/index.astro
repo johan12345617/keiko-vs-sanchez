@@ -1,0 +1,406 @@
+---
+import fallbackResults from "../data/fallback-results.json";
+import "../styles/global.css";
+
+const initialCandidates = [...fallbackResults.candidates].sort(
+  (a, b) => b.votes - a.votes,
+);
+const initialDifference = Math.abs(
+  initialCandidates[0].votes - initialCandidates[1].votes,
+);
+const initialResults = {
+  ...fallbackResults,
+  candidates: initialCandidates,
+  race: {
+    label: `${initialCandidates[0].name} va ganando`,
+    difference: initialDifference,
+  },
+};
+
+const numberFormat = new Intl.NumberFormat("es-PE");
+const percentFormat = new Intl.NumberFormat("es-PE", {
+  minimumFractionDigits: 3,
+  maximumFractionDigits: 3,
+});
+const dateFormat = new Intl.DateTimeFormat("es-PE", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "America/Lima",
+});
+const splitCandidateName = (name: string) => {
+  const [firstName, ...rest] = name.split(/\s+/);
+  return [firstName, rest.join(" ")].filter(Boolean);
+};
+const isDev = import.meta.env.DEV;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content="Seguimiento de la segunda vuelta presidencial de Perú 2026 con datos de ONPE."
+    />
+    <meta name="theme-color" content="#090b10" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <title>Perú decide | Segunda vuelta 2026</title>
+  </head>
+  <body>
+    <main data-initial-results={JSON.stringify(initialResults)}>
+      <header class="masthead">
+        <a
+          class="source-link"
+          href="https://resultadosegundavuelta.onpe.gob.pe/main/resumen"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Datos oficiales ONPE
+          <span aria-hidden="true">↗</span>
+        </a>
+        <p class="eyebrow">Segunda vuelta presidencial · Perú 2026</p>
+        <h1>Voto a voto</h1>
+        <div class="status-row">
+          <span class="live-dot" aria-hidden="true"></span>
+          <p id="race-status" aria-live="polite">
+            {initialCandidates[0].name} va ganando
+          </p>
+        </div>
+      </header>
+
+      <section class="results" aria-label="Resultados por candidato">
+        {
+          initialCandidates.map((candidate, index) => (
+            <article
+              class:list={["candidate", index === 0 && "candidate-leading"]}
+              data-candidate={index}
+            >
+              <div class="candidate-topline">
+                <span class="candidate-number">0{index + 1}</span>
+                <span class="leader-badge" hidden={index !== 0}>
+                  En ventaja
+                </span>
+              </div>
+              <div class="candidate-identity">
+                <img
+                  class="candidate-photo"
+                  src={candidate.image}
+                  alt={`Foto oficial de ${candidate.name}`}
+                  width="180"
+                  height="180"
+                  loading="eager"
+                  decoding="async"
+                />
+                <p class="party">{candidate.party}</p>
+                <h2 class="candidate-name">
+                  {
+                    splitCandidateName(candidate.name).map((namePart) => (
+                      <span>{namePart}</span>
+                    ))
+                  }
+                </h2>
+              </div>
+              <div class="candidate-result">
+                <p class="percentage">
+                  <span class="percentage-value">
+                    {percentFormat.format(candidate.percentage)}
+                  </span>
+                  <span class="percentage-symbol">%</span>
+                </p>
+                <p class="votes">
+                  <strong class="votes-value">
+                    {numberFormat.format(candidate.votes)}
+                  </strong>
+                  votos válidos
+                </p>
+              </div>
+              <div class="bar" aria-hidden="true">
+                <span style={`width: ${candidate.percentage}%`} />
+              </div>
+            </article>
+          ))
+        }
+      </section>
+
+      <section class="difference" aria-labelledby="difference-title">
+        <div>
+          <p class="section-label" id="difference-title">La diferencia</p>
+          <p class="difference-value" id="difference-value">
+            {numberFormat.format(initialDifference)}
+          </p>
+          <p class="difference-unit">votos separan a ambos candidatos</p>
+        </div>
+        <div class="actas">
+          <div class="actas-heading">
+            <p>Actas contabilizadas</p>
+            <strong id="actas-percentage">
+              {percentFormat.format(fallbackResults.actas.percentage)}%
+            </strong>
+          </div>
+          <div
+            class="actas-track"
+            role="progressbar"
+            aria-label="Actas contabilizadas"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={fallbackResults.actas.percentage}
+          >
+            <span style={`width: ${fallbackResults.actas.percentage}%`} />
+          </div>
+          <p class="actas-count" id="actas-count">
+            {numberFormat.format(fallbackResults.actas.counted)} de {
+              numberFormat.format(fallbackResults.actas.total)
+            } actas
+          </p>
+        </div>
+      </section>
+
+      {
+        isDev && (
+          <aside class="dev-controls" aria-label="Simulación de resultados">
+            <div>
+              <strong>Modo de desarrollo</strong>
+              <p>Simula el diseño final con el cómputo al 100%.</p>
+            </div>
+            <div class="dev-actions">
+              <button type="button" data-simulate-winner="Roberto Sánchez">
+                Gana Sánchez
+              </button>
+              <button type="button" data-simulate-winner="Keiko Fujimori">
+                Gana Keiko
+              </button>
+            </div>
+          </aside>
+        )
+      }
+
+      <footer>
+        <div>
+          <p id="data-source">{fallbackResults.source}</p>
+          <p>
+            Actualizado:
+            <time id="updated-at" datetime={fallbackResults.updatedAt}>
+              {dateFormat.format(new Date(fallbackResults.updatedAt))}
+            </time>
+          </p>
+        </div>
+        <p class="refresh-note">
+          La página busca una actualización cada 5 minutos.
+        </p>
+      </footer>
+
+      <aside class="notice" id="notice">
+        <strong>Último corte guardado.</strong>
+        Este dato fue obtenido directamente de ONPE y se reemplazará
+        automáticamente cuando el servicio responda.
+      </aside>
+
+      <p class="legal-note">
+        El cómputo al 100% permite identificar quién obtuvo más votos. La
+        proclamación oficial corresponde al Jurado Nacional de Elecciones.
+      </p>
+    </main>
+
+    <script>
+      interface Candidate {
+        name: string;
+        party: string;
+        image: string;
+        votes: number;
+        percentage: number;
+      }
+
+      interface Results {
+        candidates: Candidate[];
+        actas: {
+          counted: number;
+          total: number;
+          percentage: number;
+        };
+        race: {
+          label: string;
+          difference: number;
+        };
+        updatedAt: string;
+        source: string;
+        isFallback: boolean;
+        warning?: string;
+      }
+
+      const endpoint = "/.netlify/functions/results";
+      const refreshInterval = 5 * 60 * 1000;
+      const initialResults = JSON.parse(
+        select<HTMLElement>("main").dataset.initialResults ?? "null",
+      ) as Results | null;
+      let latestResults: Results | null = initialResults;
+      const numberFormat = new Intl.NumberFormat("es-PE");
+      const percentFormat = new Intl.NumberFormat("es-PE", {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3,
+      });
+      const dateFormat = new Intl.DateTimeFormat("es-PE", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "America/Lima",
+      });
+
+      function select<T extends Element>(
+        selector: string,
+        root: ParentNode = document,
+      ): T {
+        const element = root.querySelector<T>(selector);
+        if (!element) {
+          throw new Error(`Missing page element: ${selector}`);
+        }
+        return element;
+      }
+
+      function updateCandidate(
+        card: HTMLElement,
+        candidate: Candidate,
+        isLeader: boolean,
+        isComplete: boolean,
+      ) {
+        card.classList.toggle("candidate-leading", isLeader);
+        card.classList.toggle("candidate-winner", isLeader && isComplete);
+        card.classList.toggle("candidate-runner-up", !isLeader && isComplete);
+        select<HTMLElement>(".party", card).textContent = candidate.party;
+        const photo = select<HTMLImageElement>(".candidate-photo", card);
+        photo.src = candidate.image;
+        photo.alt = `Foto oficial de ${candidate.name}`;
+        const name = select<HTMLElement>(".candidate-name", card);
+        const [firstName, ...rest] = candidate.name.split(/\s+/);
+        name.replaceChildren();
+        [firstName, rest.join(" ")].filter(Boolean).forEach((namePart) => {
+          const line = document.createElement("span");
+          line.textContent = namePart;
+          name.append(line);
+        });
+        select<HTMLElement>(".percentage-value", card).textContent =
+          percentFormat.format(candidate.percentage);
+        select<HTMLElement>(".votes-value", card).textContent =
+          numberFormat.format(candidate.votes);
+        select<HTMLElement>(".bar span", card).style.width =
+          `${Math.max(0, Math.min(candidate.percentage, 100))}%`;
+        const badge = select<HTMLElement>(".leader-badge", card);
+        badge.hidden = !isLeader;
+        badge.textContent = isComplete ? "Ganador" : "En ventaja";
+      }
+
+      function render(results: Results) {
+        latestResults = structuredClone(results);
+        const candidates = [...results.candidates].sort(
+          (a, b) => b.votes - a.votes,
+        );
+        const isComplete = results.actas.percentage >= 100;
+        select<HTMLElement>(".results").classList.toggle(
+          "results-complete",
+          isComplete,
+        );
+
+        document
+          .querySelectorAll<HTMLElement>("[data-candidate]")
+          .forEach((card, index) => {
+            updateCandidate(
+              card,
+              candidates[index],
+              index === 0,
+              isComplete,
+            );
+          });
+
+        select<HTMLElement>("#race-status").textContent = results.race.label;
+        select<HTMLElement>("#difference-value").textContent =
+          numberFormat.format(results.race.difference);
+        select<HTMLElement>("#actas-percentage").textContent =
+          `${percentFormat.format(results.actas.percentage)}%`;
+        select<HTMLElement>("#actas-count").textContent =
+          `${numberFormat.format(results.actas.counted)} de ${numberFormat.format(results.actas.total)} actas`;
+
+        const progress = select<HTMLElement>(".actas-track");
+        progress.setAttribute("aria-valuenow", String(results.actas.percentage));
+        select<HTMLElement>("span", progress).style.width =
+          `${Math.max(0, Math.min(results.actas.percentage, 100))}%`;
+
+        const updatedAt = new Date(results.updatedAt);
+        const time = select<HTMLTimeElement>("#updated-at");
+        time.dateTime = results.updatedAt;
+        time.textContent = dateFormat.format(updatedAt);
+        select<HTMLElement>("#data-source").textContent = results.source;
+
+        const notice = select<HTMLElement>("#notice");
+        notice.hidden = !results.isFallback;
+        if (results.warning) {
+          notice.replaceChildren();
+          const label = document.createElement("strong");
+          label.textContent = "Último corte guardado. ";
+          notice.append(label, document.createTextNode(results.warning));
+        }
+      }
+
+      async function refreshResults() {
+        try {
+          const response = await fetch(endpoint, {
+            headers: { Accept: "application/json" },
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          render((await response.json()) as Results);
+        } catch (error) {
+          console.error("No se pudieron actualizar los resultados:", error);
+        }
+      }
+
+      function simulateWinner(winnerName: string) {
+        if (!latestResults) {
+          return;
+        }
+
+        const simulated = structuredClone(latestResults);
+        const winner = simulated.candidates.find(
+          (candidate) => candidate.name === winnerName,
+        );
+        const runnerUp = simulated.candidates.find(
+          (candidate) => candidate.name !== winnerName,
+        );
+
+        if (!winner || !runnerUp) {
+          return;
+        }
+
+        const totalValidVotes = winner.votes + runnerUp.votes;
+        const simulatedDifference = 10_000;
+        winner.votes = Math.ceil((totalValidVotes + simulatedDifference) / 2);
+        runnerUp.votes = totalValidVotes - winner.votes;
+        winner.percentage = (winner.votes / totalValidVotes) * 100;
+        runnerUp.percentage = (runnerUp.votes / totalValidVotes) * 100;
+        simulated.actas.counted = simulated.actas.total;
+        simulated.actas.percentage = 100;
+        simulated.race = {
+          label: `${winner.name} gana el cómputo de ONPE`,
+          difference: winner.votes - runnerUp.votes,
+        };
+        simulated.source = "Simulación local";
+        simulated.isFallback = false;
+        simulated.warning = undefined;
+        simulated.updatedAt = new Date().toISOString();
+        render(simulated);
+      }
+
+      if (import.meta.env.DEV) {
+        document
+          .querySelectorAll<HTMLButtonElement>("[data-simulate-winner]")
+          .forEach((button) => {
+            button.addEventListener("click", () => {
+              simulateWinner(button.dataset.simulateWinner ?? "");
+            });
+          });
+      }
+
+      refreshResults();
+      window.setInterval(refreshResults, refreshInterval);
+    </script>
+  </body>
+</html>

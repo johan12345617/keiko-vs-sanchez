@@ -1,0 +1,26 @@
+{
+  "candidates": [
+    {
+      "name": "Keiko Fujimori",
+      "party": "Fuerza Popular",
+      "image": "/keiko-fujimori.png",
+      "votes": 8785128,
+      "percentage": 50.002
+    },
+    {
+      "name": "Roberto Sánchez",
+      "party": "Juntos por el Perú",
+      "image": "/roberto-sanchez.png",
+      "votes": 8784460,
+      "percentage": 49.998
+    }
+  ],
+  "actas": {
+    "counted": 87067,
+    "total": 92766,
+    "percentage": 93.857
+  },
+  "updatedAt": "2026-06-08T17:46:00.313Z",
+  "source": "Último corte directo de ONPE",
+  "isFallback": true
+}
