@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "netlify:dev": "netlify dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
     "test": "node --test"
@@ -13,5 +14,8 @@
     "@astrojs/check": "^0.9.4",
     "astro": "^5.9.3",
     "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "netlify-cli": "^26.1.0"
   }
 }

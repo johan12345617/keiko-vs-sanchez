@@ -189,9 +189,8 @@ async function fetchJson(url) {
   throw lastError;
 }
 
-export async function fetchOnpeResults(
-  apiBase = process.env.ONPE_API_BASE_URL ?? DEFAULT_API_BASE,
-) {
+export async function fetchOnpeResults() {
+  const apiBase = DEFAULT_API_BASE;
   const query = ELECTION_PARAMS.toString();
   const [candidatePayload, totalsPayload] = await Promise.all([
     fetchJson(`${apiBase}/resumen-general/participantes?${query}`),
@@ -215,7 +214,6 @@ export async function fetchOnpeResults(
         Date.now(),
     ),
     source: "ONPE",
-    isFallback: false,
   };
 }
 

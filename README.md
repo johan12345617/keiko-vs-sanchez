@@ -11,20 +11,19 @@ difference, and the percentage of tally sheets counted.
    endpoints.
 3. Netlify's CDN caches the function response for five minutes, so visitor
    traffic does not multiply requests to ONPE.
-4. If ONPE responds with HTML or invalid data, the function returns a clearly
-   labeled last-known snapshot obtained directly from ONPE.
-
-The ONPE base URL can be changed without a code deployment by setting
-`ONPE_API_BASE_URL`.
+4. If ONPE is unavailable or returns invalid data, the function returns an
+   uncached `502` response and the browser shows an error page. No saved
+   results or third-party data sources are used.
 
 ## Local development
 
 ```sh
 npm install
-npm run dev
+npm run netlify:dev
 ```
 
-Use `netlify dev` when testing the function and frontend together.
+Open `http://localhost:8888`. The plain `npm run dev` command starts Astro
+without Netlify Functions and should only be used for frontend-only work.
 
 ## Verification
 

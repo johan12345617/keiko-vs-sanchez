@@ -13,6 +13,7 @@
       "dependencies": [
         "npm:@astrojs/check@~0.9.4",
         "npm:astro@^5.9.3",
+        "npm:netlify-cli@^26.1.0",
         "npm:typescript@^5.8.3"
       ]
     }

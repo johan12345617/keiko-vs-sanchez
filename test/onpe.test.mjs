@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import resultsHandler from "../netlify/functions/results.mjs";
 import { __testing, getRaceStatus, parseNumber } from "../netlify/functions/lib/onpe.mjs";
 
 test("parseNumber accepts ONPE numeric strings", () => {
@@ -65,4 +66,30 @@ test("ONPE acta fields map percentage and count correctly", () => {
     total: 92_766,
     percentage: 93.857,
   });
+});
+
+test("results endpoint returns an uncached error without fallback data", async () => {
+  const originalFetch = globalThis.fetch;
+  const originalConsoleError = console.error;
+
+  globalThis.fetch = async () =>
+    new Response("<html>Service unavailable</html>", {
+      status: 503,
+      headers: { "Content-Type": "text/html" },
+    });
+  console.error = () => {};
+
+  try {
+    const response = await resultsHandler();
+    const body = await response.json();
+
+    assert.equal(response.status, 502);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+    assert.equal(response.headers.get("netlify-cdn-cache-control"), "no-store");
+    assert.equal(body.error, "ONPE_RESULTS_UNAVAILABLE");
+    assert.equal("candidates" in body, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.error = originalConsoleError;
+  }
 });
